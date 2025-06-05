@@ -1,0 +1,6 @@
+*.h5
+/data/
+*.log
+__pycache__/
+*.pyc
+.idea/
