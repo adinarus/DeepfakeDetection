@@ -20,7 +20,6 @@ def generate_filter(start, end, size):
 
     mask = np.zeros((size, size), dtype=np.float32)
 
-
     for i in range(size):
         for j in range(size):
             freq_index = i + j
@@ -277,6 +276,7 @@ class F3Net(tf.keras.Model):
             x1 = self.FAD_xcep(x1)
             x2 = self.LFS_head(x)
             x2 = self.LFS_xcep(x2)
+            x2 = tf.image.resize(x2, size=tf.shape(x1)[1:3])
             x = tf.concat([x1, x2], axis=-1)
 
 

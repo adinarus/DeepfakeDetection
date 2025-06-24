@@ -28,53 +28,9 @@ class Classifier:
     def load(self, path):
         self.model.load_weights(path)
 
-
 class Meso4(Classifier):
-    def __init__(self, learning_rate = 0.001, mode = ''):
-        self.model = self.init_model()
-        optimizer = Adam(learning_rate = learning_rate)
-        self.model.compile(
-            optimizer=optimizer,
-            loss='binary_crossentropy',
-            metrics=[
-                'accuracy',
-                Precision(name='precision'),
-                Recall(name='recall'),
-                AUC(name='auc')
-            ]
-        )
-    def init_model(self): 
-        x = Input(shape = (IMGWIDTH, IMGWIDTH, 3))
-        
-        x1 = Conv2D(8, (3, 3), padding='same', activation = 'relu')(x)
-        x1 = BatchNormalization()(x1)
-        x1 = MaxPooling2D(pool_size=(2, 2), padding='same')(x1)
-        
-        x2 = Conv2D(8, (5, 5), padding='same', activation = 'relu')(x1)
-        x2 = BatchNormalization()(x2)
-        x2 = MaxPooling2D(pool_size=(2, 2), padding='same')(x2)
-        
-        x3 = Conv2D(16, (5, 5), padding='same', activation = 'relu')(x2)
-        x3 = BatchNormalization()(x3)
-        x3 = MaxPooling2D(pool_size=(2, 2), padding='same')(x3)
-        
-        x4 = Conv2D(16, (5, 5), padding='same', activation = 'relu')(x3)
-        x4 = BatchNormalization()(x4)
-        x4 = MaxPooling2D(pool_size=(4, 4), padding='same')(x4)
-        
-        y = Flatten()(x4)
-        y = Dropout(0.5)(y)
-        y = Dense(16)(y)
-        y = LeakyReLU(alpha=0.1)(y)
-        y = Dropout(0.5)(y)
-        y = Dense(1, activation = 'sigmoid')(y)
-
-        return KerasModel(inputs = x, outputs = y)
-
-
-class Meso4_Conv2D_16_16_32_32(Classifier):
-    def __init__(self, learning_rate=0.001):
-        self.model = self.init_model()
+    def __init__(self, learning_rate=0.001, mode='original'):
+        self.model = self.init_model(mode)
         optimizer = Adam(learning_rate=learning_rate)
         self.model.compile(
             optimizer=optimizer,
@@ -87,22 +43,31 @@ class Meso4_Conv2D_16_16_32_32(Classifier):
             ]
         )
 
-    def init_model(self):
+    def init_model(self, mode):
         x = Input(shape=(IMGWIDTH, IMGWIDTH, 3))
 
-        x1 = Conv2D(16, (3, 3), padding='same', activation='relu')(x)
+        if mode == 'conv16_16_32_32':
+            filters = [16, 16, 32, 32]
+        elif mode == 'conv16_32_32_64':
+            filters = [16, 32, 32, 64]
+        elif mode == 'conv16_32_64_128':
+            filters = [16, 32, 64, 128]
+        else:
+            filters = [8, 8, 16, 16]
+
+        x1 = Conv2D(filters[0], (3, 3), padding='same', activation='relu')(x)
         x1 = BatchNormalization()(x1)
         x1 = MaxPooling2D(pool_size=(2, 2), padding='same')(x1)
 
-        x2 = Conv2D(16, (5, 5), padding='same', activation='relu')(x1)
+        x2 = Conv2D(filters[1], (5, 5), padding='same', activation='relu')(x1)
         x2 = BatchNormalization()(x2)
         x2 = MaxPooling2D(pool_size=(2, 2), padding='same')(x2)
 
-        x3 = Conv2D(32, (5, 5), padding='same', activation='relu')(x2)
+        x3 = Conv2D(filters[2], (5, 5), padding='same', activation='relu')(x2)
         x3 = BatchNormalization()(x3)
         x3 = MaxPooling2D(pool_size=(2, 2), padding='same')(x3)
 
-        x4 = Conv2D(32, (5, 5), padding='same', activation='relu')(x3)
+        x4 = Conv2D(filters[3], (5, 5), padding='same', activation='relu')(x3)
         x4 = BatchNormalization()(x4)
         x4 = MaxPooling2D(pool_size=(4, 4), padding='same')(x4)
 
@@ -115,9 +80,10 @@ class Meso4_Conv2D_16_16_32_32(Classifier):
 
         return KerasModel(inputs=x, outputs=y)
 
-class Meso4_Conv2D_16_32_32_64(Classifier):
-    def __init__(self, learning_rate=0.001):
-        self.model = self.init_model()
+
+class Meso6(Classifier):
+    def __init__(self, learning_rate=0.001, mode='original'):
+        self.model = self.init_model(mode)
         optimizer = Adam(learning_rate=learning_rate)
         self.model.compile(
             optimizer=optimizer,
@@ -130,65 +96,32 @@ class Meso4_Conv2D_16_32_32_64(Classifier):
             ]
         )
 
-    def init_model(self):
+    def init_model(self, mode):
         x = Input(shape=(IMGWIDTH, IMGWIDTH, 3))
 
-        x1 = Conv2D(16, (3, 3), padding='same', activation='relu')(x)
+        filters = [8, 8, 16, 32, 64, 128]
+
+        x1 = Conv2D(filters[0], (3, 3), padding='same', activation='relu')(x)
         x1 = BatchNormalization()(x1)
         x1 = MaxPooling2D(pool_size=(2, 2), padding='same')(x1)
 
-        x2 = Conv2D(32, (5, 5), padding='same', activation='relu')(x1)
+        x11 = Conv2D(filters[1], (3, 3), padding='same', activation='relu')(x1)
+        x11 = BatchNormalization()(x11)
+        x11 = MaxPooling2D(pool_size=(2, 2), padding='same')(x11)
+
+        x2 = Conv2D(filters[2], (5, 5), padding='same', activation='relu')(x11)
         x2 = BatchNormalization()(x2)
         x2 = MaxPooling2D(pool_size=(2, 2), padding='same')(x2)
 
-        x3 = Conv2D(32, (5, 5), padding='same', activation='relu')(x2)
+        x22 = Conv2D(filters[3], (5, 5), padding='same', activation='relu')(x2)
+        x22 = BatchNormalization()(x22)
+        x22 = MaxPooling2D(pool_size=(2, 2), padding='same')(x22)
+
+        x3 = Conv2D(filters[4], (5, 5), padding='same', activation='relu')(x22)
         x3 = BatchNormalization()(x3)
         x3 = MaxPooling2D(pool_size=(2, 2), padding='same')(x3)
 
-        x4 = Conv2D(64, (5, 5), padding='same', activation='relu')(x3)
-        x4 = BatchNormalization()(x4)
-        x4 = MaxPooling2D(pool_size=(4, 4), padding='same')(x4)
-
-        y = Flatten()(x4)
-        y = Dropout(0.5)(y)
-        y = Dense(16)(y)
-        y = LeakyReLU(alpha=0.1)(y)
-        y = Dropout(0.5)(y)
-        y = Dense(1, activation='sigmoid')(y)
-
-        return KerasModel(inputs=x, outputs=y)
-
-class Meso4_Conv2D_16_32_64_128(Classifier):
-    def __init__(self, learning_rate=0.001):
-        self.model = self.init_model()
-        optimizer = Adam(learning_rate=learning_rate)
-        self.model.compile(
-            optimizer=optimizer,
-            loss='binary_crossentropy',
-            metrics=[
-                'accuracy',
-                Precision(name='precision'),
-                Recall(name='recall'),
-                AUC(name='auc')
-            ]
-        )
-
-    def init_model(self):
-        x = Input(shape=(IMGWIDTH, IMGWIDTH, 3))
-
-        x1 = Conv2D(16, (3, 3), padding='same', activation='relu')(x)
-        x1 = BatchNormalization()(x1)
-        x1 = MaxPooling2D(pool_size=(2, 2), padding='same')(x1)
-
-        x2 = Conv2D(32, (5, 5), padding='same', activation='relu')(x1)
-        x2 = BatchNormalization()(x2)
-        x2 = MaxPooling2D(pool_size=(2, 2), padding='same')(x2)
-
-        x3 = Conv2D(64, (5, 5), padding='same', activation='relu')(x2)
-        x3 = BatchNormalization()(x3)
-        x3 = MaxPooling2D(pool_size=(2, 2), padding='same')(x3)
-
-        x4 = Conv2D(128, (5, 5), padding='same', activation='relu')(x3)
+        x4 = Conv2D(filters[5], (5, 5), padding='same', activation='relu')(x3)
         x4 = BatchNormalization()(x4)
         x4 = MaxPooling2D(pool_size=(4, 4), padding='same')(x4)
 
@@ -202,7 +135,7 @@ class Meso4_Conv2D_16_32_64_128(Classifier):
         return KerasModel(inputs=x, outputs=y)
 
 class MesoInception4(Classifier):
-    def __init__(self, learning_rate = 0.001, mode = ''):
+    def __init__(self, learning_rate = 0.001, mode = 'original'):
         self.model = self.init_model()
         optimizer = Adam(learning_rate = learning_rate)
         self.model.compile(
@@ -263,7 +196,7 @@ class MesoInception4(Classifier):
 
 
 class XceptionNet(Classifier):
-    def __init__(self, input_shape=(IMGWIDTH, IMGWIDTH, 3), learning_rate=0.0001, mode = ''):
+    def __init__(self, input_shape=(IMGWIDTH, IMGWIDTH, 3), learning_rate=0.0001, mode = 'original'):
         base_model = Xception(weights='imagenet', include_top=False, input_shape=input_shape)
         self.base_model = base_model
         # classification head
@@ -280,35 +213,6 @@ class XceptionNet(Classifier):
             metrics=['accuracy', Precision(name='precision'), Recall(name='recall'), AUC(name='auc')]
         )
 
-
-class XceptionClassifierV2(Classifier):
-    def __init__(self, input_shape=(IMGWIDTH, IMGWIDTH, 3), learning_rate=0.0001, mode = ''):
-        base_model = Xception(weights='imagenet', include_top=False, input_shape=input_shape)
-        self.base_model = base_model
-
-        x = base_model.output
-        x = GlobalAveragePooling2D()(x)
-        x = Dropout(0.5)(x)
-
-        x = Dense(1024)(x)
-        x = LeakyReLU(0.1)(x)
-        x = Dropout(0.5)(x)
-
-        x = Dense(512)(x)
-        x = LeakyReLU(0.1)(x)
-        x = Dropout(0.5)(x)
-
-        x = Dense(512)(x)
-        x = LeakyReLU(0.1)(x)
-
-        output = Dense(1, activation='sigmoid')(x)
-
-        self.model = KerasModel(inputs=base_model.input, outputs=output)
-        self.model.compile(
-            optimizer=Adam(learning_rate=learning_rate),
-            loss='binary_crossentropy',
-            metrics=['accuracy', Precision(name='precision'), Recall(name='recall'), AUC(name='auc')]
-        )
 
 class F3NetClassifier(Classifier):
 
@@ -337,7 +241,7 @@ class F3NetClassifier(Classifier):
 
 def get_preprocessing_function(model_class):
     def preprocessing(x):
-        if model_class in [F3NetClassifier, XceptionClassifierV2, XceptionNet]:
+        if model_class in [F3NetClassifier, XceptionNet]:
             return (x / 127.5) - 1.0
         else:
             return x / 255.0
